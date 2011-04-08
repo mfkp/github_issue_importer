@@ -18,12 +18,12 @@ class GitHub
 		File.open('credentials.config', 'r') do |config|  
 		  @login = config.gets
 		  @token = config.gets
+		  @gforgeBaseUrl = config.gets.chomp
 		end  
 		getGforgeIssues(@url)
 	end
 
 	def getGforgeIssues(url)
-		gforgeBaseUrl = 'http://gforge.unl.edu'
 		page = Nokogiri::HTML(open(url))
 
 		#First, get the category links from the main page
@@ -40,7 +40,7 @@ class GitHub
 				#Second, visit each page and pull all the issue links
 				start = 0
 				while (items > 0)
-					fullUrl = gforgeBaseUrl + link[:href] + '&start=' + start.to_s
+					fullUrl = @gforgeBaseUrl + link[:href] + '&start=' + start.to_s
 					puts fullUrl
 					page2 = Nokogiri::HTML(open(fullUrl))
 					rows = page2.search('.main .tabular tr')
@@ -48,7 +48,7 @@ class GitHub
 					#Finally, parse through each tracker item and add it to github
 					rows.each do |row|
 						itemLink = row.search('td a').first
-						fullItemLink = gforgeBaseUrl + itemLink[:href]
+						fullItemLink = @gforgeBaseUrl + itemLink[:href]
 						puts fullItemLink
 						#Do something with the tracker items here.
 					end

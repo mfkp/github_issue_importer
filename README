@@ -2,6 +2,7 @@ Copy the file credentials.config.sample to credentials.config
 
 On the first line, type your github username.
 On the second line, type your API Token (found in Account Settings -> Account Admin)
+On the third line, type the gforge base URL (no trailing slash)
 
 Gem Requirements:
 	Nokogiri
