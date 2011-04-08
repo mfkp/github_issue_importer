@@ -11,7 +11,7 @@ Gem Requirements:
 
 Instructions:
 	ruby issuetransfer.rb
-	Type in the tracker URL you wish to import
+	Type in the gforge tracker URL you wish to import (should end in /tracker/)
 	Type in the name of the new github project
 	Type in the owner of the new github project (probably UNL)
 

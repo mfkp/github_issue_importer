@@ -19,14 +19,32 @@ class GitHub
 		  @login = config.gets
 		  @token = config.gets
 		end  
-		getIssues(@url)
+		getGforgeIssues(@url)
 	end
 
-	def getIssues(url)
+	def getGforgeIssues(url)
+		gforgeURL = 'http://gforge.unl.edu'
 		page = Nokogiri::HTML(open(url))
+
+		#First, get the category links from the main page
+		rows = page.search('.main .tabular tr')
+		rows = rows[7..rows.size-2]
+		rows.each do |row|
+			cells = row.search('td')
+			if (cells[cells.size-2])
+				items = cells[cells.size-2].text
+				puts 'items: ' + items
+			end
+			row.search('td a').each do |link|
+				tag = link.text
+				tag.strip!
+				puts tag + ": " + gforgeURL + link[:href]
+			end
+		end
+
 		page.search('.tabular tr').each do |row|
 			row.search('//td').each do |cell|
-				puts cell.content
+				#puts cell.content
 			end
 		end
 	end
