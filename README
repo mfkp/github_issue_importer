@@ -1,0 +1,16 @@
+Copy the file credentials.config.sample to credentials.config
+
+On the first line, type your github username.
+On the second line, type your API Token (found in Account Settings -> Account Admin)
+
+Gem Requirements:
+	Nokogiri
+		gem install nokogiri
+	Httparty
+		gem install httparty
+
+Instructions:
+	ruby issuetransfer.rb
+	Type in the tracker URL you wish to import
+	Type in the name of the new github project
+	Type in the owner of the new github project (probably UNL)
