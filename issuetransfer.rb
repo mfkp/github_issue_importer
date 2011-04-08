@@ -23,7 +23,7 @@ class GitHub
 	end
 
 	def getGforgeIssues(url)
-		gforgeBaseURL = 'http://gforge.unl.edu'
+		gforgeBaseUrl = 'http://gforge.unl.edu'
 		page = Nokogiri::HTML(open(url))
 
 		#First, get the category links from the main page
@@ -33,17 +33,26 @@ class GitHub
 			cells = row.search('td')
 			items = cells[cells.size-2].text.to_i
 			link = row.search('td a').first
-			text = link.text.to_s
-			tag = text.squeeze(" ").strip
-			start = 0
-			puts tag
-			puts 'items: ' + items.to_s
-			#Second, visit each page and pull all the issue links
-			while (items > 0)
-				url = gforgeBaseURL + link[:href] + '&start=' + start.to_s
-				puts url
-				start += 25
-				items -= 25
+			tag = link.text.to_s
+			if (items > 0)
+				puts tag
+				puts 'items: ' + items.to_s
+				#Second, visit each page and pull all the issue links
+				start = 0
+				while (items > 0)
+					fullUrl = gforgeBaseUrl + link[:href] + '&start=' + start.to_s
+					puts fullUrl
+					page2 = Nokogiri::HTML(open(fullUrl))
+					rows = page2.search('.main .tabular tr')
+					rows = rows[1..rows.size-2]
+					#Finally, parse through each tracker item and add it to github
+					rows.each do |row|
+						itemLink = row.search('td a').first
+						puts gforgeBaseUrl + itemLink[:href]
+					end
+					start += 25
+					items -= 25
+				end
 			end
 		end
 
