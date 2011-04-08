@@ -14,3 +14,7 @@ Instructions:
 	Type in the tracker URL you wish to import
 	Type in the name of the new github project
 	Type in the owner of the new github project (probably UNL)
+
+Development:
+	This is still a work in progress.
+	Github issues API located at http://develop.github.com/p/issues.html
