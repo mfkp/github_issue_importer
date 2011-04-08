@@ -48,7 +48,9 @@ class GitHub
 					#Finally, parse through each tracker item and add it to github
 					rows.each do |row|
 						itemLink = row.search('td a').first
-						puts gforgeBaseUrl + itemLink[:href]
+						fullItemLink = gforgeBaseUrl + itemLink[:href]
+						puts fullItemLink
+						#Do something with the tracker items here.
 					end
 					start += 25
 					items -= 25
