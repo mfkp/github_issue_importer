@@ -57,12 +57,6 @@ class GitHub
 				end
 			end
 		end
-
-		page.search('.tabular tr').each do |row|
-			row.search('//td').each do |cell|
-				#puts cell.content
-			end
-		end
 	end
 
 	def newIssue(title, body)
