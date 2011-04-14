@@ -56,8 +56,11 @@ class GitHub
 						when 'To-Do'
 							submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
 							puts submittedBy
-							status = page3.css('table')[1].to_s.match(/Closed/) || page3.css('table')[1].to_s.match(/Open/)
+							dataTable = page3.css('table')[1].to_s
+							status = dataTable.match(/Closed/) || page3.css('table')[1].to_s.match(/Open/)
 							puts status
+							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip
+							puts title
 							
 						when 'Support'
 							#parse 'support'
