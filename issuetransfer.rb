@@ -62,7 +62,9 @@ class GitHub
 							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
 							puts title
 							body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
-							puts body
+							page3.css('table.tabular')[0].css('td pre').each do |comment|
+								puts comment.to_s.gsub(/<\/?[^>]+>/, '')
+							end
 							
 						when 'Support'
 							#parse 'support'
