@@ -57,10 +57,12 @@ class GitHub
 							submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
 							puts submittedBy
 							dataTable = page3.css('table')[1].to_s
-							status = dataTable.match(/Closed/) || page3.css('table')[1].to_s.match(/Open/)
+							status = dataTable.match(/Closed/).to_s || page3.css('table')[1].to_s.match(/Open/) || ''
 							puts status
-							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip
+							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
 							puts title
+							body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
+							puts body
 							
 						when 'Support'
 							#parse 'support'
@@ -73,6 +75,9 @@ class GitHub
 						else
 							puts 'im confused'
 						end
+						
+						puts '------------------'
+						puts ''
 					end
 					start += 25
 					items -= 25
