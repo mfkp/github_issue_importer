@@ -33,7 +33,8 @@ class GitHub
 			cells = row.search('td')
 			items = cells[cells.size-2].text.to_i
 			link = row.search('td a').first
-			tag = link.text.to_s
+			tag = link.text
+			tag = tag[2..tag.size-1].gsub(/e*s$/, '')
 			if (items > 0)
 				puts tag
 				puts 'items: ' + items.to_s
@@ -41,7 +42,7 @@ class GitHub
 				start = 0
 				while (items > 0)
 					fullUrl = @gforgeBaseUrl + link[:href] + '&start=' + start.to_s
-					puts fullUrl
+					#puts fullUrl
 					page2 = Nokogiri::HTML(open(fullUrl))
 					rows = page2.search('.main .tabular tr')
 					rows = rows[1..rows.size-2]
@@ -50,7 +51,25 @@ class GitHub
 						itemLink = row.search('td a').first
 						fullItemLink = @gforgeBaseUrl + itemLink[:href]
 						puts fullItemLink
-						#Do something with the tracker items here.
+						page3 = Nokogiri::HTML(open(fullItemLink))
+						case tag
+						when 'To-Do'
+							submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
+							puts submittedBy
+							status = page3.css('table')[1].to_s.match(/Closed/) || page3.css('table')[1].to_s.match(/Open/)
+							puts status
+							
+						when 'Support'
+							#parse 'support'
+						when 'Patch'
+							#parse 'patches'
+						when 'Feature Request'
+							#parse 'feature requests'
+						when 'Bug'
+							#parse 'bugs'
+						else
+							puts 'im confused'
+						end
 					end
 					start += 25
 					items -= 25
@@ -64,5 +83,11 @@ class GitHub
 		#self.class.post('/issues/open/'+@pushToUser+'/'+@project, options)
 	end
 end
+
+class RegexHelper 
+	def href_matches_regex node_set, regex_string 
+		! node_set.select { |node| node['href'] =~ /#{regex_string}/ }.empty?
+	end 
+end 
 
 GitHub.new.newIssue('some title', 'issue text')
