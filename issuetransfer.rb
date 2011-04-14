@@ -10,14 +10,14 @@ class GitHub
 	
 	def initialize
 		puts 'Tracker URL to be imported (example: http://gforge.unl.edu/gf/project/unl_mediayak/tracker/ ):'
-		@url = STDIN.gets
+		@url = STDIN.gets.chomp
 		puts 'Import issues to which github project?'
-		@project = STDIN.gets
+		@project = STDIN.gets.chomp
 		puts 'Which user owns this project?'
-		@pushToUser = STDIN.gets
+		@pushToUser = STDIN.gets.chomp
 		File.open('credentials.config', 'r') do |config|  
-		  @login = config.gets
-		  @token = config.gets
+		  @login = config.gets.chomp
+		  @token = config.gets.chomp
 		  @gforgeBaseUrl = config.gets.chomp
 		end  
 		getGforgeIssues(@url)
@@ -47,6 +47,7 @@ class GitHub
 					rows = page2.search('.main .tabular tr')
 					rows = rows[1..rows.size-2]
 					#Finally, parse through each tracker item and add it to github
+					#row = rows.first
 					rows.each do |row|
 						itemLink = row.search('td a').first
 						fullItemLink = @gforgeBaseUrl + itemLink[:href]
@@ -55,15 +56,30 @@ class GitHub
 						case tag
 						when 'To-Do'
 							submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
-							puts submittedBy
 							dataTable = page3.css('table')[1].to_s
 							status = dataTable.match(/Closed/).to_s || page3.css('table')[1].to_s.match(/Open/) || ''
-							puts status
 							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
-							puts title
 							body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
+							puts 'Adding to-do: ' + title
+							#create issue
+							issueNumber = newIssue(title, body)
+							#add label based on gforge category
+							if (!addLabel(issueNumber, tag))
+								puts 'Error: could not add comment for issue ' + issueNumber.to_s
+							end
+							#add each comment
 							page3.css('table.tabular')[0].css('td pre').each do |comment|
-								puts comment.to_s.gsub(/<\/?[^>]+>/, '')
+								c = comment.to_s.gsub(/<\/?[^>]+>/, '')
+								if (!addComment(issueNumber, c))
+									puts 'Error: could not add comment for issue ' + issueNumber.to_s
+								end
+							end
+							#check status and close ticket
+							if (status === 'Closed')
+								puts 'Closing issue.'
+								if (!closeIssue(issueNumber))
+									puts 'Error: could not close issue ' + issueNumber.to_s
+								end
 							end
 							
 						when 'Support'
@@ -90,7 +106,30 @@ class GitHub
 
 	def newIssue(title, body)
 		options = {:body => {:title => title, :body => body, :login => @login, :token => @token}}
-		#self.class.post('/issues/open/'+@pushToUser+'/'+@project, options)
+		response = self.class.post('/issues/open/' + @pushToUser + '/' + @project, options)
+		issueNumber = response['issue']['number']
+		return issueNumber
+	end
+
+	def addLabel(issueNumber, label)
+		options = {:body => {:login => @login, :token => @token}}
+		response = self.class.post('/issues/label/add/' + @pushToUser + '/' + @project + '/' + label.to_s + '/' + issueNumber.to_s, options)
+		success = response.message
+		return success.to_s === 'OK'
+	end
+
+	def addComment(issueNumber, comment)
+		options = {:body => {:comment => comment, :login => @login, :token => @token}}
+		response = self.class.post('/issues/comment/' + @pushToUser + '/' + @project + '/' + issueNumber.to_s, options)
+		success = response.message
+		return success.to_s === 'Created'
+	end
+	
+	def closeIssue(issueNumber)
+		options = {:body => {:login => @login, :token => @token}}
+		response = self.class.post('/issues/close/' + @pushToUser + '/' + @project + '/' + issueNumber.to_s, options)
+		success = response.message
+		return success.to_s === 'OK'
 	end
 end
 
@@ -100,4 +139,4 @@ class RegexHelper
 	end 
 end 
 
-GitHub.new.newIssue('some title', 'issue text')
+GitHub.new
