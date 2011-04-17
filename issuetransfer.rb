@@ -36,7 +36,6 @@ class GitHub
 			tag = link.text
 			tag = tag[2..tag.size-1].gsub(/e*s$/, '')
 			if (items > 0)
-				puts tag
 				puts 'items: ' + items.to_s
 				#Second, visit each page and pull all the issue links
 				start = 0
@@ -53,35 +52,15 @@ class GitHub
 						fullItemLink = @gforgeBaseUrl + itemLink[:href]
 						puts fullItemLink
 						page3 = Nokogiri::HTML(open(fullItemLink))
+						submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
+						dataTable = page3.css('table')[1].to_s
+						status = dataTable.match(/Closed/).to_s || page3.css('table')[1].to_s.match(/Open/) || ''
+						title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
+						body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
+						
 						case tag
 						when 'To-Do'
-							submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
-							dataTable = page3.css('table')[1].to_s
-							status = dataTable.match(/Closed/).to_s || page3.css('table')[1].to_s.match(/Open/) || ''
-							title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
-							body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
-							puts 'Adding to-do: ' + title
-							#create issue
-							issueNumber = newIssue(title, body)
-							#add label based on gforge category
-							if (!addLabel(issueNumber, tag))
-								puts 'Error: could not add comment for issue ' + issueNumber.to_s
-							end
-							#add each comment
-							page3.css('table.tabular')[0].css('td pre').each do |comment|
-								c = comment.to_s.gsub(/<\/?[^>]+>/, '')
-								if (!addComment(issueNumber, c))
-									puts 'Error: could not add comment for issue ' + issueNumber.to_s
-								end
-							end
-							#check status and close ticket
-							if (status === 'Closed')
-								puts 'Closing issue.'
-								if (!closeIssue(issueNumber))
-									puts 'Error: could not close issue ' + issueNumber.to_s
-								end
-							end
-							
+							#nothing special
 						when 'Support'
 							#parse 'support'
 						when 'Patch'
@@ -89,11 +68,37 @@ class GitHub
 						when 'Feature Request'
 							#parse 'feature requests'
 						when 'Bug'
-							#parse 'bugs'
+							bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
+							if (bugUrl.size > 0)							
+								body += 'URL: ' + bugUrl
+							end
 						else
-							puts 'im confused'
+							puts 'Error: could not figure out category.'
 						end
+
+						puts 'Adding ' + tag + ': ' + title
+						#create issue
+						issueNumber = newIssue(title, body)
 						
+						#add label based on gforge category
+						if (!addLabel(issueNumber, tag))
+							puts 'Error: could not add comment for issue ' + issueNumber.to_s
+						end
+						#add each comment
+						page3.css('table.tabular')[0].css('td pre').each do |comment|
+							c = comment.to_s.gsub(/<\/?[^>]+>/, '')
+							if (!addComment(issueNumber, c))
+								puts 'Error: could not add comment for issue ' + issueNumber.to_s
+							end
+						end
+						#check status and close ticket
+						if (status === 'Closed')
+							puts 'Closing issue.'
+							if (!closeIssue(issueNumber))
+								puts 'Error: could not close issue ' + issueNumber.to_s
+							end
+						end
+
 						puts '------------------'
 						puts ''
 					end
