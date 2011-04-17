@@ -108,6 +108,7 @@ class GitHub
 		options = {:body => {:title => title, :body => body, :login => @login, :token => @token}}
 		response = self.class.post('/issues/open/' + @pushToUser + '/' + @project, options)
 		issueNumber = response['issue']['number']
+		sleep 1
 		return issueNumber
 	end
 
@@ -115,6 +116,7 @@ class GitHub
 		options = {:body => {:login => @login, :token => @token}}
 		response = self.class.post('/issues/label/add/' + @pushToUser + '/' + @project + '/' + label.to_s + '/' + issueNumber.to_s, options)
 		success = response.message
+		sleep 1
 		return success.to_s === 'OK'
 	end
 
@@ -122,6 +124,7 @@ class GitHub
 		options = {:body => {:comment => comment, :login => @login, :token => @token}}
 		response = self.class.post('/issues/comment/' + @pushToUser + '/' + @project + '/' + issueNumber.to_s, options)
 		success = response.message
+		sleep 1
 		return success.to_s === 'Created'
 	end
 	
@@ -129,6 +132,7 @@ class GitHub
 		options = {:body => {:login => @login, :token => @token}}
 		response = self.class.post('/issues/close/' + @pushToUser + '/' + @project + '/' + issueNumber.to_s, options)
 		success = response.message
+		sleep 1
 		return success.to_s === 'OK'
 	end
 end
