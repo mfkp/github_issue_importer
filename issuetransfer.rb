@@ -37,7 +37,16 @@ class GitHub
 			link = row.search('td a').first
 			tag = link.text
 			tag = tag[2..tag.size-1].gsub(/e*s$/, '')
-#			if (tag == 'Feature Request')
+
+			#rename tags for standardization
+			if (tag == 'Features/Bug')
+				tag = 'Bug'
+			end
+			if (tag == 'Support Issu' || tag == 'User input support')
+				tag = 'Support'
+			end
+
+#			if (tag == 'Bug')
 			if (items > 0)
 				puts 'items: ' + items.to_s
 				#Second, visit each page and pull all the issue links
@@ -57,26 +66,18 @@ class GitHub
 						page3 = Nokogiri::HTML(open(fullItemLink))
 						submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
 						dataTable = page3.css('table')[1].to_s
-						status = dataTable.match(/Closed/).to_s || page3.css('table')[1].to_s.match(/Open/) || ''
+						status = dataTable.match(/<strong>Status<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').chomp.strip.gsub(/Status:/, '') || ''
 						title = dataTable.match(/<strong>Summary<\/strong><br\s*[\/]*>\s*(.*)\s*<\/tr>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/Summary/, '').chomp.strip || ''
 						body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
 						
 						case tag
-						when 'To-Do'
-							#nothing special
-						when 'Support'
-							#parse 'support'
 						when 'Patch'
 							#parse 'patches'
-						when 'Feature Request'
-							#nothing special
-						when 'Bug'
+						when 'Bug', 'Support'
 							bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
 							if (bugUrl.size > 0)							
 								body += '<br/>URL: ' + bugUrl
 							end
-						else
-							puts 'Error: could not figure out category.'
 						end
 
 						puts 'Adding ' + tag + ': ' + title
