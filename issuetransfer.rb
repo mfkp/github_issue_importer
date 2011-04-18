@@ -4,6 +4,9 @@ require 'nokogiri'
 require 'open-uri'
 require 'httparty'
 require 'uri'
+require 'net/http'
+require 'json'
+require 'pp'
 
 class GitHub
 	include HTTParty
@@ -21,7 +24,8 @@ class GitHub
 		  @token = config.gets.chomp
 		  @gforgeBaseUrl = config.gets.chomp
 		end  
-		getGforgeIssues(@url)
+		#getGforgeIssues(@url)
+		createGist('test.patch', 'test')
 		puts 'Done.'
 	end
 
@@ -144,6 +148,19 @@ class GitHub
 		success = response.message
 		sleep 1
 		return success.to_s === 'OK'
+	end
+
+	def createGist(name, content)
+		response = Net::HTTP.post_form(URI.parse('http://gist.github.com/api/v1/json/new'), {
+		      "files[#{name}]" => content,
+		      "description" => '',
+		      "login" => @login,
+		      "token" => @token
+		})
+		response = JSON.parse(response.body)
+		gist = 'https://gist.github.com/' + response['gists'][0]['repo']
+		sleep 1
+		return gist
 	end
 end
 
