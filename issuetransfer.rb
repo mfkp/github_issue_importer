@@ -3,6 +3,7 @@ require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
 require 'httparty'
+require 'uri'
 
 class GitHub
 	include HTTParty
@@ -21,6 +22,7 @@ class GitHub
 		  @gforgeBaseUrl = config.gets.chomp
 		end  
 		getGforgeIssues(@url)
+		puts 'Done.'
 	end
 
 	def getGforgeIssues(url)
@@ -35,6 +37,7 @@ class GitHub
 			link = row.search('td a').first
 			tag = link.text
 			tag = tag[2..tag.size-1].gsub(/e*s$/, '')
+#			if (tag == 'Feature Request')
 			if (items > 0)
 				puts 'items: ' + items.to_s
 				#Second, visit each page and pull all the issue links
@@ -66,11 +69,11 @@ class GitHub
 						when 'Patch'
 							#parse 'patches'
 						when 'Feature Request'
-							#parse 'feature requests'
+							#nothing special
 						when 'Bug'
 							bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
 							if (bugUrl.size > 0)							
-								body += 'URL: ' + bugUrl
+								body += '<br/>URL: ' + bugUrl
 							end
 						else
 							puts 'Error: could not figure out category.'
@@ -106,6 +109,7 @@ class GitHub
 					items -= 25
 				end
 			end
+#			end
 		end
 	end
 
@@ -119,7 +123,7 @@ class GitHub
 
 	def addLabel(issueNumber, label)
 		options = {:body => {:login => @login, :token => @token}}
-		response = self.class.post('/issues/label/add/' + @pushToUser + '/' + @project + '/' + label.to_s + '/' + issueNumber.to_s, options)
+		response = self.class.post('/issues/label/add/' + @pushToUser + '/' + @project + '/' + URI.escape(label.to_s) + '/' + issueNumber.to_s, options)
 		success = response.message
 		sleep 1
 		return success.to_s === 'OK'
