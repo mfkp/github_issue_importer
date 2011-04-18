@@ -24,8 +24,7 @@ class GitHub
 		  @token = config.gets.chomp
 		  @gforgeBaseUrl = config.gets.chomp
 		end  
-		#getGforgeIssues(@url)
-		createGist('test.patch', 'test')
+		getGforgeIssues(@url)
 		puts 'Done.'
 	end
 
@@ -50,7 +49,7 @@ class GitHub
 				tag = 'Support'
 			end
 
-#			if (tag == 'Bug')
+			#if (tag == 'Patch')
 			if (items > 0)
 				puts 'items: ' + items.to_s
 				#Second, visit each page and pull all the issue links
@@ -76,11 +75,17 @@ class GitHub
 						
 						case tag
 						when 'Patch'
-							#parse 'patches'
+							patchUrl = @gforgeBaseUrl + page3.css('table.tabular')[1].css('td a').first[:href]
+							fileName = page3.css('table.tabular')[1].css('td a').first.to_s.gsub(/<\/?[^>]+>/, '')
+							content = Net::HTTP.get(URI.parse(patchUrl))
+							gistUrl = createGist(fileName, content)
+							if (gistUrl.size > 0)
+								body += '<br/><br/>Patch: ' + gistUrl
+							end
 						when 'Bug', 'Support'
 							bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
-							if (bugUrl.size > 0)							
-								body += '<br/>URL: ' + bugUrl
+							if (bugUrl.size > 0)
+								body += '<br/><br/>URL: ' + bugUrl
 							end
 						end
 
@@ -114,7 +119,7 @@ class GitHub
 					items -= 25
 				end
 			end
-#			end
+			#end
 		end
 	end
 
