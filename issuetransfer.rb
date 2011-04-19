@@ -87,6 +87,8 @@ class GitHub
 								end
 						end
 
+						body += '<br/><br/>Originally submitted by: ' + submittedBy
+
 						puts 'Adding ' + tag + ': ' + title
 
 						#create issue
