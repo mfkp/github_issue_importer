@@ -6,7 +6,6 @@ require 'httparty'
 require 'uri'
 require 'net/http'
 require 'json'
-require 'pp'
 
 class GitHub
 	include HTTParty
@@ -49,9 +48,10 @@ class GitHub
 				tag = 'Support'
 			end
 
-			#if (tag == 'Patch')
 			if (items > 0)
-				puts 'items: ' + items.to_s
+				puts '================'
+				puts tag + ' items: ' + items.to_s
+				puts '================'
 				#Second, visit each page and pull all the issue links
 				start = 0
 				while (items > 0)
@@ -61,11 +61,9 @@ class GitHub
 					rows = page2.search('.main .tabular tr')
 					rows = rows[1..rows.size-2]
 					#Finally, parse through each tracker item and add it to github
-					#row = rows.first
 					rows.each do |row|
 						itemLink = row.search('td a').first
 						fullItemLink = @gforgeBaseUrl + itemLink[:href]
-						puts fullItemLink
 						page3 = Nokogiri::HTML(open(fullItemLink))
 						submittedBy = page3.xpath("//a[href_matches_regex(., '.*/gf/user/.*')]", RegexHelper.new).first.to_s.gsub(/<\/?[^>]+>/, '')
 						dataTable = page3.css('table')[1].to_s
@@ -113,13 +111,11 @@ class GitHub
 						end
 
 						puts '------------------'
-						puts ''
 					end
 					start += 25
 					items -= 25
 				end
 			end
-			#end
 		end
 	end
 
