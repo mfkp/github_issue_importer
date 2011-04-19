@@ -14,8 +14,9 @@ Instructions:
 	ruby issuetransfer.rb
 	Type in the gforge tracker URL you wish to import (should end in /tracker/)
 	Type in the name of the new github project
-	Type in the owner of the new github project (probably UNL)
+	Type in the owner of the new github project (e.g. UNL)
 
 Development:
-	This is still a work in progress.
+	This script should be mostly working now, tested for all the cases I could find in gforge.
 	Github issues API located at http://develop.github.com/p/issues.html
+	Github gist API located at http://develop.github.com/p/gist.html
