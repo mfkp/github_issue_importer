@@ -56,10 +56,10 @@ class GitHub
 				start = 0
 				while (items > 0)
 					fullUrl = @gforgeBaseUrl + link[:href] + '&start=' + start.to_s
-					#puts fullUrl
 					page2 = Nokogiri::HTML(open(fullUrl))
 					rows = page2.search('.main .tabular tr')
 					rows = rows[1..rows.size-2]
+
 					#Finally, parse through each tracker item and add it to github
 					rows.each do |row|
 						itemLink = row.search('td a').first
@@ -72,22 +72,23 @@ class GitHub
 						body = page3.at_css('#details_readonly pre').to_s.gsub(/<\/?[^>]+>/, '') || ''
 						
 						case tag
-						when 'Patch'
-							patchUrl = @gforgeBaseUrl + page3.css('table.tabular')[1].css('td a').first[:href]
-							fileName = page3.css('table.tabular')[1].css('td a').first.to_s.gsub(/<\/?[^>]+>/, '')
-							content = Net::HTTP.get(URI.parse(patchUrl))
-							gistUrl = createGist(fileName, content)
-							if (gistUrl.size > 0)
-								body += '<br/><br/>Patch: ' + gistUrl
-							end
-						when 'Bug', 'Support'
-							bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
-							if (bugUrl.size > 0)
-								body += '<br/><br/>URL: ' + bugUrl
-							end
+							when 'Patch'
+								patchUrl = @gforgeBaseUrl + page3.css('table.tabular')[1].css('td a').first[:href]
+								fileName = page3.css('table.tabular')[1].css('td a').first.to_s.gsub(/<\/?[^>]+>/, '')
+								content = Net::HTTP.get(URI.parse(patchUrl))
+								gistUrl = createGist(fileName, content)
+								if (gistUrl.size > 0)
+									body += '<br/><br/>Patch: ' + gistUrl
+								end
+							when 'Bug', 'Support'
+								bugUrl = dataTable.match(/<strong>URL<\/strong>:<br\s*[\/]*>\s*(.*)\s*<\/td>/).to_s.gsub(/<\/?[^>]+>/, '').gsub(/URL:/, '').chomp.strip || ''
+								if (bugUrl.size > 0)
+									body += '<br/><br/>URL: ' + bugUrl
+								end
 						end
 
 						puts 'Adding ' + tag + ': ' + title
+
 						#create issue
 						issueNumber = newIssue(title, body)
 						
@@ -95,6 +96,7 @@ class GitHub
 						if (!addLabel(issueNumber, tag))
 							puts 'Error: could not add comment for issue ' + issueNumber.to_s
 						end
+
 						#add each comment
 						page3.css('table.tabular')[0].css('td pre').each do |comment|
 							c = comment.to_s.gsub(/<\/?[^>]+>/, '')
@@ -102,6 +104,7 @@ class GitHub
 								puts 'Error: could not add comment for issue ' + issueNumber.to_s
 							end
 						end
+
 						#check status and close ticket
 						if (status === 'Closed')
 							puts 'Closing issue.'
